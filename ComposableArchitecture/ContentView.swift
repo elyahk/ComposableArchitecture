@@ -54,7 +54,7 @@ func nthPrime(_ n: Int, callback: @escaping (Int?) -> Void) -> Void {
 }
 
 struct ContentView: View {
-    @ObservedObject var store: Store<AppState, CounterAction>
+    @ObservedObject var store: Store<AppState, AppAction>
 
     var body: some View {
         NavigationView {
@@ -109,12 +109,28 @@ enum CounterAction {
     case decrTapped
 }
 
-func couterReducer(_ state: inout AppState, action: CounterAction) -> Void {
+enum PrimeModelAction {
+    case removeFavouritePrimeTapped
+    case saveFavouritePrimeTapped
+}
+
+enum AppAction {
+    case counter(CounterAction)
+    case primeModal(PrimeModelAction)
+}
+
+func appReducer(_ state: inout AppState, action: AppAction) -> Void {
     switch action {
-    case .incrTapped:
+    case .counter(.incrTapped):
         state.count += 1
-    case .decrTapped:
+    case .counter(.decrTapped):
         state.count -= 1
+    case .primeModal(.removeFavouritePrimeTapped):
+        state.favoritePrimes.removeAll(where: { $0 == state.count })
+        state.activityFeed.append(.init(timestamp: Date(), type: .removedFavoritePrime(state.count)))
+    case .primeModal(.saveFavouritePrimeTapped):
+        state.favoritePrimes.append(state.count)
+        state.activityFeed.append(.init(timestamp: Date(), type: .addedFavoritePrime(state.count)))
     }
 }
 
@@ -125,7 +141,7 @@ struct PrimeAlert: Identifiable {
 }
 
 struct CounterView: View {
-    @ObservedObject var store: Store<AppState, CounterAction>
+    @ObservedObject var store: Store<AppState, AppAction>
     @State var isPrimeModalShown: Bool = false
     @State var alertNthPrime: PrimeAlert?
     @State var isNthPrimeButtonDisabled = false
@@ -134,13 +150,13 @@ struct CounterView: View {
         VStack {
             HStack {
                 Button(action: {
-                    store.send(.decrTapped)
+                    store.send(.counter(.decrTapped))
                 }) {
                     Text("-")
                 }
                 Text("\(self.store.value.count)")
                 Button(action: {
-                    store.send(.incrTapped)
+                    store.send(.counter(.incrTapped))
                 }) {
                     Text("+")
                 }
@@ -187,7 +203,7 @@ private func isPrime (_ p: Int) -> Bool {
 }
 
 struct IsPrimeModalView: View {
-    @ObservedObject var store: Store<AppState, CounterAction>
+    @ObservedObject var store: Store<AppState, AppAction>
 
     var body: some View {
         VStack {
@@ -195,16 +211,13 @@ struct IsPrimeModalView: View {
                 Text("\(self.store.value.count) is prime 🎉")
                 if self.store.value.favoritePrimes.contains(self.store.value.count) {
                     Button(action: {
-                        self.store.value.favoritePrimes.removeAll(where: { $0 == self.store.value.count })
-                        self.store.value.activityFeed.append(.init(timestamp: Date(), type: .removedFavoritePrime(self.store.value.count)))
+                        store.send(.primeModal(.removeFavouritePrimeTapped))
                     }) {
                         Text("Remove from favorite primes")
                     }
                 } else {
                     Button(action: {
-                        self.store.value.favoritePrimes.append(self.store.value.count)
-                        self.store.value.activityFeed.append(.init(timestamp: Date(), type: .addedFavoritePrime(self.store.value.count)))
-
+                        store.send(.primeModal(.saveFavouritePrimeTapped))
                     }) {
                         Text("Save to favorite primes")
                     }
@@ -273,6 +286,6 @@ class Store<Value, Action>: ObservableObject {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(store: Store(initialValue: AppState(), reducer: couterReducer(_:action:)))
+        ContentView(store: Store(initialValue: AppState(), reducer: appReducer(_:action:)))
     }
 }
