@@ -11,6 +11,7 @@
 		615513C42A624B3200592CE8 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 615513C32A624B3200592CE8 /* ContentView.swift */; };
 		615513C62A624B3300592CE8 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 615513C52A624B3300592CE8 /* Assets.xcassets */; };
 		615513C92A624B3300592CE8 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 615513C82A624B3300592CE8 /* Preview Assets.xcassets */; };
+		615513D02A624B8E00592CE8 /* Wolfram.swift in Sources */ = {isa = PBXBuildFile; fileRef = 615513CF2A624B8E00592CE8 /* Wolfram.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +20,7 @@
 		615513C32A624B3200592CE8 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		615513C52A624B3300592CE8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		615513C82A624B3300592CE8 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		615513CF2A624B8E00592CE8 /* Wolfram.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Wolfram.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 				615513C32A624B3200592CE8 /* ContentView.swift */,
 				615513C52A624B3300592CE8 /* Assets.xcassets */,
 				615513C72A624B3300592CE8 /* Preview Content */,
+				615513CF2A624B8E00592CE8 /* Wolfram.swift */,
 			);
 			path = ComposableArchitecture;
 			sourceTree = "<group>";
@@ -137,6 +140,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				615513D02A624B8E00592CE8 /* Wolfram.swift in Sources */,
 				615513C42A624B3200592CE8 /* ContentView.swift in Sources */,
 				615513C22A624B3200592CE8 /* ComposableArchitectureApp.swift in Sources */,
 			);
