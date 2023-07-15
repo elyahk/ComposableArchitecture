@@ -119,12 +119,12 @@ enum AppAction {
     case primeModal(PrimeModelAction)
 }
 
-func counterReducer(_ state: inout AppState, action: AppAction) -> Void {
+func counterReducer(_ state: inout Int, action: AppAction) -> Void {
     switch action {
     case .counter(.incrTapped):
-        state.count += 1
+        state += 1
     case .counter(.decrTapped):
-        state.count -= 1
+        state -= 1
     default: break
     }
 }
@@ -149,7 +149,19 @@ func combine<State, Action>(_ reducers: (inout State, Action) -> Void...) -> (in
     }
 }
 
-let appReducer = combine(counterReducer, primeModalReducer)
+func pullback<GlobalValue, LocalValue, Action>(
+    _ reducer: @escaping (inout LocalValue, Action) -> Void,
+    value: WritableKeyPath<GlobalValue, LocalValue>
+) -> (inout GlobalValue, Action) -> Void {
+    return { globalValue, action in
+        reducer(&globalValue[keyPath: value], action)
+    }
+}
+
+let appReducer = combine(
+    pullback(counterReducer, value: \.count),
+    primeModalReducer
+)
 
 struct PrimeAlert: Identifiable {
     let prime: Int
