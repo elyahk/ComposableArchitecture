@@ -104,12 +104,21 @@ struct AppState {
     }
 }
 
-class Store<Value>: ObservableObject {
-    @Published var value: Value
+enum CounterAction {
+    case incrTapped
+    case decrTapped
+}
 
-    init(initialValue: Value) {
-        self.value = initialValue
+func couterReducer(_ state: AppState, action: CounterAction) -> AppState {
+    var copy = state
+    switch action {
+    case .incrTapped:
+        copy.count += 1
+    case .decrTapped:
+        copy.count -= 1
     }
+
+    return copy
 }
 
 struct PrimeAlert: Identifiable {
@@ -127,15 +136,23 @@ struct CounterView: View {
     var body: some View {
         VStack {
             HStack {
-                Button(action: { self.store.value.count -= 1 }) {
+                Button(action: {
+                    self.store.value = couterReducer(store.value, action: .decrTapped)
+//                    self.store.value.count -= 1
+                }) {
                     Text("-")
                 }
                 Text("\(self.store.value.count)")
-                Button(action: { self.store.value.count += 1 }) {
+                Button(action: {
+                    self.store.value = couterReducer(store.value, action: .incrTapped)
+//                    self.store.value.count += 1
+                }) {
                     Text("+")
                 }
             }
-            Button(action: { self.isPrimeModalShown = true }) {
+            Button(action: {
+                self.isPrimeModalShown = true
+            }) {
                 Text("Is this prime?")
             }
             Button(action: self.nthPrimeButtonAction) {
@@ -242,6 +259,14 @@ struct FavoritePrimesView: View {
             }
         }
         .navigationBarTitle(Text("Favorite Primes"))
+    }
+}
+
+class Store<Value>: ObservableObject {
+    @Published var value: Value
+
+    init(initialValue: Value) {
+        self.value = initialValue
     }
 }
 
