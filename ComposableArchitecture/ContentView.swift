@@ -62,7 +62,7 @@ struct ContentView: View {
                 NavigationLink(destination: CounterView(store: self.store)) {
                     Text("Counter demo")
                 }
-                NavigationLink(destination: FavoritePrimesView(state: self.$store.value.favoritePrimesState)) {
+                NavigationLink(destination: FavoritePrimesView(store: self.store)) {
                     Text("Favorite primes")
                 }
             }
@@ -114,9 +114,34 @@ enum PrimeModelAction {
     case saveFavouritePrimeTapped
 }
 
+enum FavouriteModalAction {
+    case deleteFavouritePrimes(IndexSet)
+}
+
 enum AppAction {
     case counter(CounterAction)
     case primeModal(PrimeModelAction)
+    case favourite(FavouriteModalAction)
+}
+
+struct FavoritePrimesState {
+    var favoritePrimes: [Int]
+    var activityFeed: [AppState.Activity]
+}
+
+extension AppState {
+    var favoritePrimesState: FavoritePrimesState {
+        get {
+            FavoritePrimesState(
+                favoritePrimes: self.favoritePrimes,
+                activityFeed: self.activityFeed
+            )
+        }
+        set {
+            self.favoritePrimes = newValue.favoritePrimes
+            self.activityFeed = newValue.activityFeed
+        }
+    }
 }
 
 func counterReducer(_ state: inout Int, action: AppAction) -> Void {
@@ -141,6 +166,18 @@ func primeModalReducer(_ state: inout AppState, action: AppAction) -> Void {
     }
 }
 
+func favouritePrimeModalReducer(_ state: inout FavoritePrimesState, action: AppAction) -> Void {
+    switch action {
+    case .favourite(.deleteFavouritePrimes(let indexSet)):
+        for index in indexSet {
+            let prime = state.favoritePrimes[index]
+            state.favoritePrimes.removeAll(where: { $0 == prime })
+            state.activityFeed.append(.init(timestamp: Date(), type: .removedFavoritePrime(prime)))
+        }
+    default: break
+    }
+}
+
 func combine<State, Action>(_ reducers: (inout State, Action) -> Void...) -> (inout State, Action) -> Void {
     return { state, action in
         reducers.forEach { reducer in
@@ -160,7 +197,8 @@ func pullback<GlobalValue, LocalValue, Action>(
 
 let appReducer = combine(
     pullback(counterReducer, value: \.count),
-    primeModalReducer
+    primeModalReducer,
+    pullback(favouritePrimeModalReducer, value: \.favoritePrimesState)
 )
 
 struct PrimeAlert: Identifiable {
@@ -260,38 +298,20 @@ struct IsPrimeModalView: View {
     }
 }
 
-struct FavoritePrimesState {
-    var favoritePrimes: [Int]
-    var activityFeed: [AppState.Activity]
-}
-extension AppState {
-    var favoritePrimesState: FavoritePrimesState {
-        get {
-            FavoritePrimesState(
-                favoritePrimes: self.favoritePrimes,
-                activityFeed: self.activityFeed
-            )
-        }
-        set {
-            self.favoritePrimes = newValue.favoritePrimes
-            self.activityFeed = newValue.activityFeed
-        }
-    }
-}
-
 struct FavoritePrimesView: View {
-    @Binding var state: FavoritePrimesState
+    @ObservedObject var store: Store<AppState, AppAction>
 
     var body: some View {
         List {
-            ForEach(self.state.favoritePrimes, id: \.self) { prime in
+            ForEach(self.store.value.favoritePrimes, id: \.self) { prime in
                 Text("\(prime)")
             }
             .onDelete { indexSet in
+
                 for index in indexSet {
-                    let prime = self.state.favoritePrimes[index]
-                    self.state.favoritePrimes.remove(at: index)
-                    self.state.activityFeed.append(.init(timestamp: Date(), type: .removedFavoritePrime(prime)))
+                    let prime = self.store.value.favoritePrimes[index]
+                    self.store.value.favoritePrimes.remove(at: index)
+                    self.store.value.activityFeed.append(.init(timestamp: Date(), type: .removedFavoritePrime(prime)))
                 }
             }
         }
