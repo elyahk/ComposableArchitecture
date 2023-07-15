@@ -119,20 +119,37 @@ enum AppAction {
     case primeModal(PrimeModelAction)
 }
 
-func appReducer(_ state: inout AppState, action: AppAction) -> Void {
+func counterReducer(_ state: inout AppState, action: AppAction) -> Void {
     switch action {
     case .counter(.incrTapped):
         state.count += 1
     case .counter(.decrTapped):
         state.count -= 1
+    default: break
+    }
+}
+
+func primeModalReducer(_ state: inout AppState, action: AppAction) -> Void {
+    switch action {
     case .primeModal(.removeFavouritePrimeTapped):
         state.favoritePrimes.removeAll(where: { $0 == state.count })
         state.activityFeed.append(.init(timestamp: Date(), type: .removedFavoritePrime(state.count)))
     case .primeModal(.saveFavouritePrimeTapped):
         state.favoritePrimes.append(state.count)
         state.activityFeed.append(.init(timestamp: Date(), type: .addedFavoritePrime(state.count)))
+    default: break
     }
 }
+
+func combine<State, Action>(_ reducers: (inout State, Action) -> Void...) -> (inout State, Action) -> Void {
+    return { state, action in
+        reducers.forEach { reducer in
+            reducer(&state, action)
+        }
+    }
+}
+
+let appReducer = combine(counterReducer, primeModalReducer)
 
 struct PrimeAlert: Identifiable {
     let prime: Int
@@ -286,6 +303,6 @@ class Store<Value, Action>: ObservableObject {
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(store: Store(initialValue: AppState(), reducer: appReducer(_:action:)))
+        ContentView(store: Store(initialValue: AppState(), reducer: appReducer))
     }
 }
