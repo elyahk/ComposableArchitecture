@@ -54,7 +54,7 @@ func nthPrime(_ n: Int, callback: @escaping (Int?) -> Void) -> Void {
 }
 
 struct ContentView: View {
-    @ObservedObject var store: Store<AppState>
+    @ObservedObject var store: Store<AppState, CounterAction>
 
     var body: some View {
         NavigationView {
@@ -109,16 +109,13 @@ enum CounterAction {
     case decrTapped
 }
 
-func couterReducer(_ state: AppState, action: CounterAction) -> AppState {
-    var copy = state
+func couterReducer(_ state: inout AppState, action: CounterAction) -> Void {
     switch action {
     case .incrTapped:
-        copy.count += 1
+        state.count += 1
     case .decrTapped:
-        copy.count -= 1
+        state.count -= 1
     }
-
-    return copy
 }
 
 struct PrimeAlert: Identifiable {
@@ -128,7 +125,7 @@ struct PrimeAlert: Identifiable {
 }
 
 struct CounterView: View {
-    @ObservedObject var store: Store<AppState>
+    @ObservedObject var store: Store<AppState, CounterAction>
     @State var isPrimeModalShown: Bool = false
     @State var alertNthPrime: PrimeAlert?
     @State var isNthPrimeButtonDisabled = false
@@ -137,15 +134,13 @@ struct CounterView: View {
         VStack {
             HStack {
                 Button(action: {
-                    self.store.value = couterReducer(store.value, action: .decrTapped)
-//                    self.store.value.count -= 1
+                    store.send(.decrTapped)
                 }) {
                     Text("-")
                 }
                 Text("\(self.store.value.count)")
                 Button(action: {
-                    self.store.value = couterReducer(store.value, action: .incrTapped)
-//                    self.store.value.count += 1
+                    store.send(.incrTapped)
                 }) {
                     Text("+")
                 }
@@ -192,7 +187,7 @@ private func isPrime (_ p: Int) -> Bool {
 }
 
 struct IsPrimeModalView: View {
-    @ObservedObject var store: Store<AppState>
+    @ObservedObject var store: Store<AppState, CounterAction>
 
     var body: some View {
         VStack {
@@ -262,16 +257,22 @@ struct FavoritePrimesView: View {
     }
 }
 
-class Store<Value>: ObservableObject {
+class Store<Value, Action>: ObservableObject {
+    let reducer: (inout Value, Action) -> Void
     @Published var value: Value
 
-    init(initialValue: Value) {
+    init(initialValue: Value, reducer: @escaping (inout Value, Action) -> Void) {
         self.value = initialValue
+        self.reducer = reducer
+    }
+
+    func send(_ action: Action) {
+        reducer(&value, action)
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        ContentView(store: Store(initialValue: AppState()))
+        ContentView(store: Store(initialValue: AppState(), reducer: couterReducer(_:action:)))
     }
 }
